@@ -1,25 +1,46 @@
-#Author Nicholas D Sullivan
+#Author Nicholas Sullivan
+#nickdsullivan@gmail.com
+
+
+
+
+
 #This file handles browser functions (like opening the window) as menu navigation. 
 #it also handles checking if the menu is on screen which is a simple way detect death
 #Another potential way is just to take an image but I am pretty sure that this is fastest
 
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium import webdriver
-
+import time
 #this function takes a window_size and returns a browser object
-def initBrowser(window_size,window_pos=(0,0)):
+def initBrowser(window_size,window_pos=(0,0),options=None):
 	#First we have to get the webdriver
-	browser = webdriver.Chrome()
+	if options != None:
+		browser = webdriver.Chrome(chrome_options=options)
+		
+		time.sleep(20)
+		browser.switch_to.window(browser.window_handles[1])
+		browser.close()
+		browser.switch_to.window(browser.window_handles[0])
+	else:
+		browser = webdriver.Chrome()
 	#set the size of the window
 	browser.set_window_size(window_size[0],window_size[1]+95)
 	browser.set_window_position(window_pos[0],window_pos[1])
+
+
+
+
 	return browser
 
 #Opens a given webpage.  Defaults to agar.io = hype
-def openPage(browser,webpage='http://agar.io'):
+def openPage(browser,webpage='http://agar.io',adblockWindow=False):
 	#Open the webpage
 	browser.get(webpage)
-	
+	#If we used a adblock then the donation page will come up
+	#If so then way till it does then close it
+
+		
 
 #This function navigates the agar.io menu
 #Inputs
@@ -67,7 +88,14 @@ def startAgarioGame(browser,maxIter=100,timeBetweenTries = 2,timeAfterClickingPl
 				#If the setting menu is open then close it
 				ac = ActionChains(browser)
 				ac.move_to_element(noSkins).move_by_offset(-100, 0).click().perform()
+			except:
+				#If the settings menu is not open then most of the time (if it failed on the noSkins than it won't but I doubt that will happen) 
+				#it will throw an error when trying to access noSkins.  
+				#Most of the errors will come from the first access or something after the menu clicks 
+				#Obviously TODO fix this thing moron so it works better.  
+				continue
 			continue
+			#I know the above looks bad give me a break
 
 		return True
 	if count > maxIter:
