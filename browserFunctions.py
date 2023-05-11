@@ -12,10 +12,13 @@
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium import webdriver
 import time
+
 #this function takes a window_size and returns a browser object
-def initBrowser(window_size,window_pos=(0,0),options=None):
+def initBrowser(window_size=(800,800),window_pos=(0,0),options=None):
 	#First we have to get the webdriver
+
 	if options != None:
+		adblock = True
 		browser = webdriver.Chrome(chrome_options=options)
 		
 		time.sleep(20)
@@ -37,10 +40,7 @@ def initBrowser(window_size,window_pos=(0,0),options=None):
 def openPage(browser,webpage='http://agar.io',adblockWindow=False):
 	#Open the webpage
 	browser.get(webpage)
-	#If we used a adblock then the donation page will come up
-	#If so then way till it does then close it
-
-		
+	
 
 #This function navigates the agar.io menu
 #Inputs
@@ -50,7 +50,7 @@ def openPage(browser,webpage='http://agar.io',adblockWindow=False):
 #timeAfterClickingPlay: How long until this method should return after a success.  
 #For agar.io it is after a 30sec ad so waiting 35 seconds helps
 
-def startAgarioGame(browser,maxIter=100,timeBetweenTries = 2,timeAfterClickingPlay = 35):
+def startAgarioGame(browser,maxIter=100,timeBetweenTries = 2,timeAfterClickingPlay = 35,restart=False):
 	#Keep track if we are still in the menu kind of
 	button = 0
 	#current itteration
@@ -60,26 +60,48 @@ def startAgarioGame(browser,maxIter=100,timeBetweenTries = 2,timeAfterClickingPl
 		count = count +1
 		#This waits inbetween tries
 		time.sleep(timeBetweenTries)
-		
+
+
+
+		#If we are REstarting the game we won't change settings
+		if restart:
+			try:
+				browser.find_element('xpath','//*[@id="play"]').click()
+				time.sleep(timeAfterClickingPlay)
+			except:
+				continue
+
+
+
+
+
+
+
+		#Else go through the settings and start the game for the first time
 		try:
+			print("Settings")
 			#Click on the settings tab
 			browser.find_element('xpath','//*[@id="settingsButton"]').click()
 			#Click on the no skins option for better image recognizion
 			noSkins = browser.find_element('xpath','//*[@id="mainui-settings"]/div[2]/div[3]/div[1]')
 			noSkins.click()
+			#No colors option
+			browser.find_element('xpath','//*[@id="mainui-settings"]/div[2]/div[3]/div[3]').click()
+			#Dark theme option
+			browser.find_element('xpath','//*[@id="mainui-settings"]/div[2]/div[3]/div[4]').click()
 			#Click on the no names option for better image recognizion
 			browser.find_element('xpath','//*[@id="mainui-settings"]/div[2]/div[3]/div[2]').click()
-
-			# TODO this is commented because I think we need to try and detect death and get score
 			#This will skip the ending stats 
-			#browser.find_element('xpath','//*[@id="mainui-settings"]/div[2]/div[3]/div[6]').click()
-
+			browser.find_element('xpath','//*[@id="mainui-settings"]/div[2]/div[3]/div[6]').click()
+			#Remove minimap
+			browser.find_element('xpath','//*[@id="mainui-settings"]/div[2]/div[3]/div[7]').click()
+			
 			#Init mouse clicks
+
 			ac = ActionChains(browser)
 			#Agario closes the settings menu with a click outside the setting menu
 			#So go to the noSkins element and click -100 px away 
 			ac.move_to_element(noSkins).move_by_offset(-100, 0).click().perform()
-
 			#Now that the settings menu is out of the way click the play button
 			browser.find_element('xpath','//*[@id="play"]').click()
 			time.sleep(timeAfterClickingPlay)
@@ -100,3 +122,15 @@ def startAgarioGame(browser,maxIter=100,timeBetweenTries = 2,timeAfterClickingPl
 		return True
 	if count > maxIter:
 		raise RuntimeError("Maximium iterations reached when trying to navigate agario website") from error
+
+#Thie method checks if the playbutton element is there
+def checkForPlayButton(browser):
+	try:
+		browser.find_element('xpath','//*[@id="play"]')
+		return True
+	except:
+		return False
+
+
+
+
